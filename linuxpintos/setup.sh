@@ -1,9 +1,7 @@
 #!/bin/bash
 
-
 #Setup
 #!!! Make sure linuxpintos folder is placed in home directory !!!
-
 cd src/utils
 make clean
 ln -s $(which qemu-system-i386) qemu
@@ -17,4 +15,5 @@ cd ../threads
 make clean
 make
 cd build
+# Will run test to make sure that the project is set up correctly.
 pintos --qemu -- run alarm-multiple
