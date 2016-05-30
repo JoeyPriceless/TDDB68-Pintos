@@ -65,6 +65,8 @@ process_execute (const char *file_name)
   tid = thread_create (file_name, PRI_DEFAULT, start_process, arguments);
 
 // Wait for child to be created
+//(This semaphore is up:ed in start_process method when the child thread
+//is created.)
   sema_down(&(arguments->load_semaphore));
 
   
@@ -83,6 +85,7 @@ process_execute (const char *file_name)
   	list_push_back(&thread_current()->children, &childinfo->child_elem);
   	intr_set_level(old_level);
   }
+//Free arguments since this struct was only needed to create the child
   free(arguments);
   return tid;
 }
@@ -97,7 +100,8 @@ start_process (void *arg)
   struct intr_frame if_;
   bool success;
 
-//The arguments needed by the child
+//The arguments needed by the child to let the parent know that it
+//can continue
   struct child_arguments* arguments = (struct child_arguments*)arg;
   char *file_name = arguments->fn_copy;
   
@@ -157,6 +161,7 @@ process_wait (tid_t child_tid)
 		//Checks to see that it is the right child and that it has not been waited for
 		//previously.
 		if(ci->tid == child_tid && !ci->usedandabused) {
+			//Is up:ed in when the child has exit:ed (in syscall).
 			sema_down(&ci->wait_semaphore);
 			ci->usedandabused = true;
 			return ci->exit_status;
@@ -551,7 +556,7 @@ static bool
 setup_stack (void **esp, char* command) {
   uint8_t *kpage;
   bool success = false;
-//	printf("\n\n\n\n%s\n\n\n\n\n",command);
+
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {

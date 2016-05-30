@@ -108,12 +108,18 @@ timer_sleep (int64_t ticks)
   	
  	
  	struct thread *t = thread_current();
-	t->target_tick = (timer_ticks() + ticks); //How long we will sleep
+
+	t->target_tick = (timer_ticks() + ticks);
 
 	intr_disable(); 
+	//Put thread in sleeplist.
+	//Sleeplist is ordered by the target_tick value, in ascending order
+	//This is done by compare method less_tick_prio in
+	//"src/threads/thread.c"
 	list_insert_ordered (&sleeplist, &t->timer_el,less_tick_prio, NULL);
 	intr_enable();	
 
+	//Let the thread sleep.
 	sema_down(&t->timer_semaphore);
 	
 }
@@ -153,9 +159,12 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
   enum intr_level old_level = intr_disable();
+  //Iterate through list of sleeping threads.
   while (!list_empty (&sleeplist)) {
+	//Fetch the first thread in the list (with lowest target_tick)
  	struct thread *t = list_entry(list_front(&sleeplist), struct thread, timer_el);
 
+	//If true we don't have to continue because of sleeplist:s order 
 	if(t->target_tick > timer_ticks()) break;
 
 	sema_up(&t->timer_semaphore);

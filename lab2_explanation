@@ -1,0 +1,37 @@
+In "src/devices/timer.c":
+
+
+Method "timer_sleep(int64t ticks)":
+
+1. 	Here we make sure that the number of ticks of which the current 	thread should sleep is not zero or smaller.
+ 
+2. 	We set the target_tick variable to the systems current tick plus the 		number of ticks that the thread should sleep.
+
+3.	We put the thread in a list of threads that are sleeping, called
+	sleeplist. This list is ordered so that the thread with the 
+	lowest target_tick is placed first in the list and then the 
+	order is ascending by the threads target_tick value.
+	
+	To make sure that we put them in the correct order we use the 		compare method less_tick_prio, in "src/threads/thread.c"
+
+4.	Then we put the thread to sleep with the thread:s timer_semaphore.
+
+
+
+Method "timer_interrupt (struct intr_frame *args UNUSED)":
+
+1.	First we add one tick.
+
+2.	We iterate through the list of sleeping threads in the list 		sleeplist.
+
+3.	We fetch the first thread in the list. Which is the thread with the
+	lowest target_tick, since the list is in ascending order by that 
+	value.
+
+4.	If the tick on this thread is higher than the current tick then we
+	don't have to look any further in the list since the upcoming 
+	threads will have a higher target_tick than the selected thread.
+
+5.	If the target_tick equals the current tick then the thread is
+	awaken and removed from the sleeplist.
+
