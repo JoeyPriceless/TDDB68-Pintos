@@ -1,0 +1,6 @@
+How to setup on IDA computers:
+
+1. Move linuxpintos folder to the home directory of your user.
+2. Run 'cd ~/linuxpintos'
+3. Run 'chmod +x setup.sh'
+4. Run './setup.sh'
