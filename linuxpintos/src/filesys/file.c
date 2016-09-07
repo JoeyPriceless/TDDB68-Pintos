@@ -20,7 +20,6 @@ struct file
 struct file *
 file_open (struct inode *inode) 
 {
-  lock_acquire(&sync_lock);
   
   struct file *file = calloc (1, sizeof *file);
   if (inode != NULL && file != NULL)
@@ -28,17 +27,13 @@ file_open (struct inode *inode)
       file->inode = inode;
       file->pos = 0;
       file->deny_write = false;
-      
-	  lock_release(&sync_lock);
-	  
+
       return file;
     }
   else
     {
       inode_close (inode);
       free (file);
-      
-      lock_release(&sync_lock);
       
       return NULL; 
     }

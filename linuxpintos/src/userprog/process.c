@@ -58,7 +58,8 @@ process_execute (const char *file_name)
 
   arguments->fn_copy = fn_copy;
 
-
+// Initialize the semaphore which will make sure that we wait for the
+// child to be created before continuing
   sema_init(&(arguments->load_semaphore),0);
 
   /* Create a new thread to execute FILE_NAME. */
@@ -154,16 +155,16 @@ process_wait (tid_t child_tid)
 
 	//printf("[%s:%s:%d:%d]\n", __FILE__,__FUNCTION__,__LINE__,thread_current()->tid);
 	
-//Searches for the child to wait for.
+//Searches for the child that we will wait for.
 	struct list_elem* el;
 	for(el = list_begin(&thread_current()->children); el != list_end(&thread_current()->children); el = list_next(el)){
 		struct child_info* ci = list_entry(el, struct child_info, child_elem);
 		//Checks to see that it is the right child and that it has not been waited for
 		//previously.
-		if(ci->tid == child_tid && !ci->usedandabused) {
-			//Is up:ed in when the child has exit:ed (in syscall).
+		if(ci->tid == child_tid && !ci->been_waited_for) {
+			// Is up:ed in when the child has exit:ed (in syscall).
 			sema_down(&ci->wait_semaphore);
-			ci->usedandabused = true;
+			ci->been_waited_for = true;
 			return ci->exit_status;
 		}
 	}
@@ -564,53 +565,51 @@ setup_stack (void **esp, char* command) {
       if (success){
         *esp = PHYS_BASE;
 		
-		int n_argument = 3;
-		char** argv;
-		argv = malloc(n_argument*sizeof(char*));
-		char* token, *save_ptr;
-		int argc = 0;
-		// place the arguments on the stack
-		for(token = strtok_r(command," ",&save_ptr); token != NULL; token = strtok_r(NULL," ",&save_ptr)){
-		   *esp -= strlen(token)+1;
-		   argv[argc] = *esp;
-		   argc++;
-		   if(argc > n_argument){
-	              n_argument *= 2;
-		      argv = realloc(argv, n_argument*sizeof(char*));
-		   }
-		   memcpy(*esp, token, strlen(token)+1);
-		}
-		//null
-		argv[argc]  = 0;
-		//fix mult of 4
-		int word_mult = (size_t) *esp % 4;
-		if (word_mult){
-		  *esp -= word_mult;
-		  memcpy(*esp, &argv[argc], word_mult);
+	int n_argument = 3;
+	char** argv;
+	argv = malloc(n_argument*sizeof(char*));
+	char* token, *save_ptr;
+	int argc = 0;
+	// place the arguments on the stack
+	for(token = strtok_r(command," ",&save_ptr); token != NULL; token = strtok_r(NULL," ",&save_ptr)){
+	   *esp -= strlen(token)+1;
+	   argv[argc] = *esp;
+	   argc++;
+	   if(argc > n_argument){
+              n_argument *= 2;
+	      argv = realloc(argv, n_argument*sizeof(char*));
+	   }
+	   memcpy(*esp, token, strlen(token)+1);
+	}
+	//null
+	argv[argc]  = 0;
+	//fix multiple of 4
+	int word_mult = (size_t) *esp % 4;
+	if (word_mult){
+	  *esp -= word_mult;
+	  memcpy(*esp, &argv[argc], word_mult);
 
-		}
-		// pointers to arguments (First one is null)
-		int i;
-		for(i=argc;i>=0;i--){
-			*esp -= sizeof(char*);
-			memcpy(*esp,&argv[i],sizeof(char*));
-		}
-		// Pushes argv
-		token = *esp;
-		*esp -= sizeof(char**);
-		memcpy(*esp, &token, sizeof(char**));
+	}
+	// pointers to arguments (First one is null)
+	int i;
+	for(i=argc;i>=0;i--){
+		*esp -= sizeof(char*);
+		memcpy(*esp,&argv[i],sizeof(char*));
+	}
+	// Pushes argv
+	token = *esp;
+	*esp -= sizeof(char**);
+	memcpy(*esp, &token, sizeof(char**));
 
-		//argc - number of animals
-		*esp -= sizeof(int);
-		memcpy(*esp,&argc,sizeof(int));
+	//argc - number of arguments
+	*esp -= sizeof(int);
+	memcpy(*esp,&argc,sizeof(int));
 
-		//null
-		*esp -= sizeof(void*);
-		memcpy(*esp,&argv[argc],sizeof(void*));
+	//null
+	*esp -= sizeof(void*);
+	memcpy(*esp,&argv[argc],sizeof(void*));
 
-		free(argv);
-		
-        
+	free(argv);
 	}
       else
         palloc_free_page (kpage);

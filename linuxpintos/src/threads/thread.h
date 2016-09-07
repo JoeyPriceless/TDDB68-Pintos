@@ -123,7 +123,6 @@ struct thread
     struct list_elem timer_el;
 
     // LAB 3
-   	
    struct semaphore load_semaphore;
    bool orphan;
    struct list children;
@@ -138,7 +137,7 @@ struct child_info{
 	struct thread* child;
 	bool success;
 	int exit_status;
-	bool usedandabused;
+	bool been_waited_for;
 };
 
 

@@ -583,7 +583,7 @@ schedule (void)
 
 
 void free_children(struct list* children){
-	
+	// Go through the list of children and set them to orphans
 	while (!list_empty (children)) { 
 		struct list_elem *el = list_pop_front(children);
  		struct child_info *ci = list_entry(el, struct child_info, child_elem);

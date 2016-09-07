@@ -37,6 +37,8 @@ struct inode
     bool removed;                       /* True if deleted, false otherwise. */
     int deny_write_cnt;                 /* 0: writes ok, >0: deny writes. */
     struct inode_disk data;             /* Inode content. */
+    int read_cnt;
+    struct semaphore rdcnt_sema, read_sema, write_sema;
   };
 
 /* Returns the disk sector that contains byte offset POS within
@@ -137,6 +139,12 @@ inode_open (disk_sector_t sector)
   inode->open_cnt = 1;
   inode->deny_write_cnt = 0;
   inode->removed = false;
+
+  inode->read_cnt = 0;
+  sema_init(&inode->read_sema, 1);
+  sema_init(&inode->write_sema, 1);
+  sema_init(&inode->rdcnt_sema, 1);
+
   disk_read (filesys_disk, inode->sector, &inode->data);
   return inode;
 }
@@ -203,6 +211,16 @@ inode_remove (struct inode *inode)
 off_t
 inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset) 
 {
+
+  sema_down(&inode->read_sema);
+  sema_down(&inode->rdcnt_sema);
+  inode->read_cnt++;
+  if(inode->read_cnt == 1)
+    sema_down(&inode->write_sema);
+  sema_up(&inode->rdcnt_sema);          
+  sema_up(&inode->read_sema);
+
+
   uint8_t *buffer = buffer_;
   off_t bytes_read = 0;
   uint8_t *bounce = NULL;
@@ -249,6 +267,12 @@ inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset)
     }
   free (bounce);
 
+  sema_down(&inode->rdcnt_sema);
+  inode->read_cnt--;
+  if(inode->read_cnt == 0)
+    sema_up(&inode->write_sema);
+  sema_up(&inode->rdcnt_sema); 
+
   return bytes_read;
 }
 
@@ -261,12 +285,18 @@ off_t
 inode_write_at (struct inode *inode, const void *buffer_, off_t size,
                 off_t offset) 
 {
+  sema_down(&inode->read_sema);
+  sema_down(&inode->write_sema);
+   
   const uint8_t *buffer = buffer_;
   off_t bytes_written = 0;
   uint8_t *bounce = NULL;
-
-  if (inode->deny_write_cnt)
+ 
+  if (inode->deny_write_cnt) {
+    sema_up(&inode->write_sema);
+    sema_up(&inode->read_sema);
     return 0;
+  }
 
   while (size > 0) 
     {
@@ -316,6 +346,9 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
       bytes_written += chunk_size;
     }
   free (bounce);
+
+  sema_up(&inode->write_sema);
+  sema_up(&inode->read_sema);
 
   return bytes_written;
 }
