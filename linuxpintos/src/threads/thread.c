@@ -288,7 +288,19 @@ thread_exit (void)
 {
   ASSERT (!intr_context ());
 
+
 #ifdef USERPROG
+  if(!thread_current()->orphan){
+     sema_up(&(thread_current()->childinfo->wait_semaphore));
+  }
+
+  int i;
+  for(i = 2; i < TABLE_SIZE; i++){
+	if(thread_current()->table[i] != NULL){
+		file_close(thread_current()->table[i]);
+	}
+  }
+
   process_exit ();
   enum intr_level old_level = intr_disable();
   free_children(&thread_current()->children);
@@ -590,6 +602,7 @@ void free_children(struct list* children){
 		ci->child->orphan = true;
 		free(ci);
 	}
+	free(children);
 }
 
 /* Returns a tid to use for a new thread. */

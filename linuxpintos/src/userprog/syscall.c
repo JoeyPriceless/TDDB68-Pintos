@@ -168,10 +168,6 @@ void exit(int *f){
 
 	printf("%s: exit(%d)\n",thread_current()->name, exit_status);
 
-	if(!thread_current()->orphan){
-	   sema_up(&(thread_current()->childinfo->wait_semaphore));
-	}
-
 	thread_exit();
 }
 
@@ -252,7 +248,7 @@ bool check_string(const char *s){
 	if(s == NULL) return false;
 	int offset = 0;
 	while(true){
-		if(!is_user_vaddr(s+offset)  || pagedir_get_page(thread_current()->pagedir, s+offset) == NULL) return 0;	
+		if(!is_user_vaddr(s+offset)  || pagedir_get_page(thread_current()->pagedir, s+offset) == NULL) return 0;
 		else if(*((char*)(s+offset)) == '\0') return 1;
 		offset++;
 	}
