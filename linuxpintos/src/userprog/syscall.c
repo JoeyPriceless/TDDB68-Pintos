@@ -23,6 +23,8 @@ int wait(int *f);
 int exec(int *f);
 void exit(int *f);
 bool create(int *f);
+bool check_string(const char *s);
+bool check_addr(int *f, int length);
 
 void syscall_init (void){
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
@@ -36,7 +38,9 @@ void halt(void){
 
 void close(int *f){
 
-	if(!is_user_vaddr(f+1) || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+1) || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+
+	if(!check_addr(f,1)) exit(-1);
 
 	
 	int fd = (int)*(f+1);
@@ -48,10 +52,14 @@ void close(int *f){
 
 int open(int *f){
 
-	if(!is_user_vaddr(f[1]) || pagedir_get_page(thread_current()->pagedir, f[1]) == NULL) exit(-1);
-	if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+	//if(!is_user_vaddr(f[1]) || pagedir_get_page(thread_current()->pagedir, f[1]) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 	
 	const char* name = (char *)*(f+1);
+	
+	if(!check_addr(f,1)) exit(-1);
+	if(!check_string(name)) exit(-1);
+
 	int fd;
 	for(fd = 2; fd < TABLE_SIZE; fd++){
 		if(thread_current()->table[fd] == NULL){
@@ -64,17 +72,20 @@ int open(int *f){
 }
 
 int write(int *f){
-
+/*
 	int i;
 	for(i = 0; i < 4; i++)
 		if(!is_user_vaddr(f+i)  || pagedir_get_page(thread_current()->pagedir, f+i) == NULL) exit(-1);
-		
-	if(!is_user_vaddr(f[2])  || pagedir_get_page(thread_current()->pagedir, f[2]) == NULL) exit(-1);
+		*/
+	//if(!is_user_vaddr(f[2])  || pagedir_get_page(thread_current()->pagedir, f[2]) == NULL) exit(-1);
 
 	
 	int fd = (int)*(f+1);
 	const void *buffer = (void *)*(f+2);
 	int size = (int)*(f+3);
+
+	if(!check_addr(f,3)) exit(-1);
+	if(!check_string(buffer)) exit(-1);
 	
 	if(!(0 < fd && fd < TABLE_SIZE)) return -1;
 	
@@ -94,16 +105,19 @@ int write(int *f){
 
 
 int read(int *f){
-
+/*
 	int i;
 	for(i = 0; i < 4; i++)
 		if(!is_user_vaddr(f+i)  || pagedir_get_page(thread_current()->pagedir, f+i) == NULL) exit(-1);
-		
-	if(!is_user_vaddr(f[2])  || pagedir_get_page(thread_current()->pagedir, f[2]) == NULL) exit(-1);
+*/		
+	//if(!is_user_vaddr(f[2])  || pagedir_get_page(thread_current()->pagedir, f[2]) == NULL) exit(-1);
 	
 	int fd = (int)*(f+1);
 	void *buffer = (void *)*(f+2);
 	int size = (int)*(f+3);
+
+	if(!check_addr(f,3)) exit(-1);
+	if(!check_string(buffer)) exit(-1);
 	
 	if(!(0 <= fd && fd < TABLE_SIZE)) return -1;
 	
@@ -121,18 +135,25 @@ int read(int *f){
 
 int wait(int *f){
 
-	if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 	
 	int child_tid = f[1];
+
+	if(!check_addr(f,1)) exit(-1);
+	
 	return process_wait(child_tid); // child exit code
 }
 
 int exec(int *f){
 
-	if(!is_user_vaddr(f[1])  || pagedir_get_page(thread_current()->pagedir, f[1]) == NULL) exit(-1);
-	if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+	//if(!is_user_vaddr(f[1])  || pagedir_get_page(thread_current()->pagedir, f[1]) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 
 	const char* cmd_line = f[1];
+
+	if(!check_addr(f,1)) exit(-1);
+	if(!check_string(cmd_line)) exit(-1);
+
     return process_execute(cmd_line); //child pid
 }
 
@@ -140,7 +161,7 @@ void exit(int *f){
 
 	int exit_status;
 	if(f == -1) exit_status = -1;
-	else if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit_status = -1;
+	else if(!check_addr(f,1)) exit_status = -1;
 	else exit_status = f[1];
 	
 	thread_current()->childinfo->exit_status = exit_status;
@@ -156,63 +177,97 @@ void exit(int *f){
 
 bool create(int *f){
 
-	if(!is_user_vaddr(f[1])  || pagedir_get_page(thread_current()->pagedir, f[1]) == NULL) exit(-1);
-	if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
-	if(!is_user_vaddr(f+2)  || pagedir_get_page(thread_current()->pagedir, f+2) == NULL) exit(-1); 
+	//if(!is_user_vaddr(f[1])  || pagedir_get_page(thread_current()->pagedir, f[1]) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+2)  || pagedir_get_page(thread_current()->pagedir, f+2) == NULL) exit(-1); 
 	
-	const char *fileName = (char *)*(f+1);
+	const char *file_name = (char *)*(f+1);
 	int size = (int)*(f+2);
 
-	if(fileName == NULL) exit(0);
+	if(!check_addr(f,2)) exit(-1);
+	if(!check_string(file_name)) exit(-1);
+
+	if(file_name == NULL) exit(0);
 	
-	return filesys_create(fileName, size);
+	return filesys_create(file_name, size);
 }
 
 void seek (int *f){
 
-	if(!is_user_vaddr(f+2)  || pagedir_get_page(thread_current()->pagedir, f+2) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+2)  || pagedir_get_page(thread_current()->pagedir, f+2) == NULL) exit(-1);
 	
 	int fd = f[1];
 	off_t pos = f[2];
+
+	if(!check_addr(f,2)) exit(-1);
+
 	return file_seek (thread_current()->table[fd], pos);
 
 }
 
 unsigned tell (int *f){
 	
-	if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
-	
+	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 	int fd = f[1];
+	
+	if(!check_addr(f,1)) exit(-1);
+
 	return file_tell (thread_current()->table[fd]); 
 }
 
 int file_size (int *f){
 
-	if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 	
 	int fd = f[1];
+
+	if(!check_addr(f,1)) exit(-1);
+
 	return file_length (thread_current()->table[fd]); 
 }
 
 
 bool remove(int *f){
 
-	if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
+	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 	
 	const char* file_name = f[1];
-	
+
+	if(!check_addr(f,1)) exit(-1);
+	if(!check_string(file_name)) exit(-1);
+
 	return filesys_remove (file_name);
 }
 
+bool check_addr(int *f, int length){
+	if(f == NULL) return false;
+	int i;
+	for(i = 0; i <= length; i++){
+		if(!is_user_vaddr(f+i)  || pagedir_get_page(thread_current()->pagedir, f+i) == NULL) return 0;
+	}
+	return 1;
+}
 
+bool check_string(const char *s){
+	if(s == NULL) return false;
+	int offset = 0;
+	while(true){
+		if(!is_user_vaddr(s+offset)  || pagedir_get_page(thread_current()->pagedir, s+offset) == NULL) return 0;	
+		else if(*((char*)(s+offset)) == '\0') return 1;
+		offset++;
+	}
+}
 
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
 	int *id = f->esp;
-	if(!is_user_vaddr(id)  || pagedir_get_page(thread_current()->pagedir, id) == NULL) exit(-1);
 
+	if(!check_addr(id,1)) exit(-1);
 
+	//if(!is_user_vaddr(id)  || pagedir_get_page(thread_current()->pagedir, id) == NULL) exit(-1);
+
+	
 	switch(*id){
 		case SYS_CREATE:
 			f->eax = create(id);

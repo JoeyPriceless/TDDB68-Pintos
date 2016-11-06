@@ -37,6 +37,7 @@ struct inode
     bool removed;                       /* True if deleted, false otherwise. */
     int deny_write_cnt;                 /* 0: writes ok, >0: deny writes. */
     struct inode_disk data;             /* Inode content. */
+    struct lock inode_lock;
     int read_cnt;
     struct semaphore rdcnt_sema, read_sema, write_sema;
   };
@@ -63,6 +64,7 @@ static struct list open_inodes;
 void
 inode_init (void) 
 {
+
   list_init (&open_inodes);
 }
 
@@ -145,6 +147,8 @@ inode_open (disk_sector_t sector)
   sema_init(&inode->write_sema, 1);
   sema_init(&inode->rdcnt_sema, 1);
 
+  lock_init(&inode->inode_lock);
+
   disk_read (filesys_disk, inode->sector, &inode->data);
   return inode;
 }
@@ -153,11 +157,13 @@ inode_open (disk_sector_t sector)
 struct inode *
 inode_reopen (struct inode *inode)
 {
+
   if (inode != NULL) 
     {
       ASSERT(inode->open_cnt != 0);
       inode->open_cnt++;
     }
+
   return inode;
 }
 
@@ -358,8 +364,10 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
 void
 inode_deny_write (struct inode *inode) 
 {
+  lock_acquire(&inode->inode_lock);
   inode->deny_write_cnt++;
   ASSERT (inode->deny_write_cnt <= inode->open_cnt);
+  lock_release(&inode->inode_lock);
 }
 
 /* Re-enables writes to INODE.
@@ -368,9 +376,12 @@ inode_deny_write (struct inode *inode)
 void
 inode_allow_write (struct inode *inode) 
 {
+  lock_acquire(&inode->inode_lock);
   ASSERT (inode->deny_write_cnt > 0);
   ASSERT (inode->deny_write_cnt <= inode->open_cnt);
   inode->deny_write_cnt--;
+  lock_release(&inode->inode_lock);
+  
 }
 
 /* Returns the length, in bytes, of INODE's data. */
