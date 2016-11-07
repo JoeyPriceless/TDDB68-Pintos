@@ -199,10 +199,11 @@ inode_close (struct inode *inode)
           free_map_release (inode->data.start,
                             bytes_to_sectors (inode->data.length)); 
         }
-
-      free (inode); 
+      lock_release(&inode->inode_lock);
+      free (inode);
+      return; 
     }
-  lock_acquire(&inode->inode_lock);
+  lock_release(&inode->inode_lock);
 }
 
 /* Marks INODE to be deleted when it is closed by the last caller who
