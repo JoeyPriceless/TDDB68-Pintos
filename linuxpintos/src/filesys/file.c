@@ -51,7 +51,7 @@ file_reopen (struct file *file)
 void
 file_close (struct file *file) 
 { 
-  lock_acquire(&sync_lock);
+  //lock_acquire(&sync_lock);
   
   if (file != NULL)
     {
@@ -60,7 +60,7 @@ file_close (struct file *file)
       free (file); 
     }
     
-  lock_release(&sync_lock);
+  //lock_release(&sync_lock);
 }
 
 /* Returns the inode encapsulated by FILE. */

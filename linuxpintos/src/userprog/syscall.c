@@ -40,7 +40,7 @@ void close(int *f){
 
 	//if(!is_user_vaddr(f+1) || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 
-	if(!check_addr(f,1)) exit(-1);
+	if(!check_addr(f,1*4)) exit(-1);
 
 	
 	int fd = (int)*(f+1);
@@ -57,7 +57,7 @@ int open(int *f){
 	
 	const char* name = (char *)*(f+1);
 	
-	if(!check_addr(f,1)) exit(-1);
+	if(!check_addr(f,1*4)) exit(-1);
 	if(!check_string(name)) exit(-1);
 
 	int fd;
@@ -84,7 +84,7 @@ int write(int *f){
 	const void *buffer = (void *)*(f+2);
 	int size = (int)*(f+3);
 
-	if(!check_addr(f,3)) exit(-1);
+	if(!check_addr(f,3*4)) exit(-1);
 	if(!check_string(buffer)) exit(-1);
 	
 	if(!(0 < fd && fd < TABLE_SIZE)) return -1;
@@ -116,7 +116,7 @@ int read(int *f){
 	void *buffer = (void *)*(f+2);
 	int size = (int)*(f+3);
 
-	if(!check_addr(f,3)) exit(-1);
+	if(!check_addr(f,3*4)) exit(-1);
 	if(!check_string(buffer)) exit(-1);
 	
 	if(!(0 <= fd && fd < TABLE_SIZE)) return -1;
@@ -139,7 +139,7 @@ int wait(int *f){
 	
 	int child_tid = f[1];
 
-	if(!check_addr(f,1)) exit(-1);
+	if(!check_addr(f,1*4)) exit(-1);
 	
 	return process_wait(child_tid); // child exit code
 }
@@ -151,7 +151,7 @@ int exec(int *f){
 
 	const char* cmd_line = f[1];
 
-	if(!check_addr(f,1)) exit(-1);
+	if(!check_addr(f,1*4)) exit(-1);
 	if(!check_string(cmd_line)) exit(-1);
 
     return process_execute(cmd_line); //child pid
@@ -161,7 +161,7 @@ void exit(int *f){
 
 	int exit_status;
 	if(f == -1) exit_status = -1;
-	else if(!check_addr(f,1)) exit_status = -1;
+	else if(!check_addr(f,1*4)) exit_status = -1;
 	else exit_status = f[1];
 	
 	thread_current()->childinfo->exit_status = exit_status;
@@ -180,7 +180,7 @@ bool create(int *f){
 	const char *file_name = (char *)*(f+1);
 	int size = (int)*(f+2);
 
-	if(!check_addr(f,2)) exit(-1);
+	if(!check_addr(f,2*4)) exit(-1);
 	if(!check_string(file_name)) exit(-1);
 
 	if(file_name == NULL) exit(0);
@@ -206,7 +206,7 @@ unsigned tell (int *f){
 	//if(!is_user_vaddr(f+1)  || pagedir_get_page(thread_current()->pagedir, f+1) == NULL) exit(-1);
 	int fd = f[1];
 	
-	if(!check_addr(f,1)) exit(-1);
+	if(!check_addr(f,1*4)) exit(-1);
 
 	return file_tell (thread_current()->table[fd]); 
 }
@@ -217,7 +217,7 @@ int file_size (int *f){
 	
 	int fd = f[1];
 
-	if(!check_addr(f,1)) exit(-1);
+	if(!check_addr(f,1*4)) exit(-1);
 
 	return file_length (thread_current()->table[fd]); 
 }
@@ -229,7 +229,7 @@ bool remove(int *f){
 	
 	const char* file_name = f[1];
 
-	if(!check_addr(f,1)) exit(-1);
+	if(!check_addr(f,1*4)) exit(-1);
 	if(!check_string(file_name)) exit(-1);
 
 	return filesys_remove (file_name);
@@ -259,7 +259,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 {
 	int *id = f->esp;
 
-	if(!check_addr(id,1)) exit(-1);
+	if(!check_addr(id,1*4)) exit(-1);
 
 	//if(!is_user_vaddr(id)  || pagedir_get_page(thread_current()->pagedir, id) == NULL) exit(-1);
 

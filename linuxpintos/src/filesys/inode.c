@@ -64,7 +64,6 @@ static struct list open_inodes;
 void
 inode_init (void) 
 {
-
   list_init (&open_inodes);
 }
 
@@ -76,6 +75,7 @@ inode_init (void)
 bool
 inode_create (disk_sector_t sector, off_t length)
 {
+
   struct inode_disk *disk_inode = NULL;
   bool success = false;
 
@@ -84,7 +84,7 @@ inode_create (disk_sector_t sector, off_t length)
   /* If this assertion fails, the inode structure is not exactly
      one sector in size, and you should fix that. */
   ASSERT (sizeof *disk_inode == DISK_SECTOR_SIZE);
-
+  
   disk_inode = calloc (1, sizeof *disk_inode);
   if (disk_inode != NULL)
     {
@@ -106,6 +106,7 @@ inode_create (disk_sector_t sector, off_t length)
         } 
       free (disk_inode);
     }
+
   return success;
 }
 
@@ -129,6 +130,7 @@ inode_open (disk_sector_t sector)
           return inode; 
         }
     }
+
 
   /* Allocate memory. */
   inode = malloc (sizeof *inode);
@@ -157,13 +159,13 @@ inode_open (disk_sector_t sector)
 struct inode *
 inode_reopen (struct inode *inode)
 {
-
   if (inode != NULL) 
     {
       ASSERT(inode->open_cnt != 0);
+      lock_acquire(&inode->inode_lock);
       inode->open_cnt++;
+      lock_release(&inode->inode_lock);
     }
-
   return inode;
 }
 
@@ -183,7 +185,7 @@ inode_close (struct inode *inode)
   /* Ignore null pointer. */
   if (inode == NULL)
     return;
-
+  lock_acquire(&inode->inode_lock);
   /* Release resources if this was the last opener. */
   if (--inode->open_cnt == 0)
     {
@@ -200,6 +202,7 @@ inode_close (struct inode *inode)
 
       free (inode); 
     }
+  lock_acquire(&inode->inode_lock);
 }
 
 /* Marks INODE to be deleted when it is closed by the last caller who
