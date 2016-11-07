@@ -51,16 +51,12 @@ file_reopen (struct file *file)
 void
 file_close (struct file *file) 
 { 
-  //lock_acquire(&sync_lock);
-  
   if (file != NULL)
     {
       file_allow_write (file);
       inode_close (file->inode);
       free (file); 
     }
-    
-  //lock_release(&sync_lock);
 }
 
 /* Returns the inode encapsulated by FILE. */
