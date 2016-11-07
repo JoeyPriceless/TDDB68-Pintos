@@ -293,13 +293,14 @@ thread_exit (void)
   if(!thread_current()->orphan){
      sema_up(&(thread_current()->childinfo->wait_semaphore));
   }
-
+/*
   int i;
   for(i = 2; i < TABLE_SIZE; i++){
 	if(thread_current()->table[i] != NULL){
 		file_close(thread_current()->table[i]);
 	}
   }
+*/
 
   process_exit ();
   enum intr_level old_level = intr_disable();
@@ -310,11 +311,10 @@ thread_exit (void)
      We will be destroyed during the call to schedule_tail(). */
   intr_disable ();
   //list_remove(&thread_current()->running_elem);
-  thread_current ()->status = THREAD_DYING;
+  thread_current()->status = THREAD_DYING;
   
   schedule ();
 
-  
   NOT_REACHED ();
 }
 
@@ -602,7 +602,6 @@ void free_children(struct list* children){
 		ci->child->orphan = true;
 		free(ci);
 	}
-	free(children);
 }
 
 /* Returns a tid to use for a new thread. */
