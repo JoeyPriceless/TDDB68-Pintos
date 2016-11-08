@@ -59,12 +59,14 @@ byte_to_sector (const struct inode *inode, off_t pos)
 /* List of open inodes, so that opening a single inode twice
    returns the same `struct inode'. */
 static struct list open_inodes;
+static struct lock lock;
 
 /* Initializes the inode module. */
 void
 inode_init (void) 
 {
   list_init (&open_inodes);
+  lock_init(&lock);
 }
 
 /* Initializes an inode with LENGTH bytes of data and
@@ -85,6 +87,7 @@ inode_create (disk_sector_t sector, off_t length)
      one sector in size, and you should fix that. */
   ASSERT (sizeof *disk_inode == DISK_SECTOR_SIZE);
   
+  lock_acquire(&lock);
   disk_inode = calloc (1, sizeof *disk_inode);
   if (disk_inode != NULL)
     {
@@ -106,6 +109,7 @@ inode_create (disk_sector_t sector, off_t length)
         } 
       free (disk_inode);
     }
+  lock_release(&lock);
 
   return success;
 }
@@ -119,7 +123,7 @@ inode_open (disk_sector_t sector)
   struct list_elem *e;
   struct inode *inode;
 
-  //lock_acquire(&sync_lock);
+  lock_acquire(&lock);
   /* Check whether this inode is already open. */
   for (e = list_begin (&open_inodes); e != list_end (&open_inodes);
        e = list_next (e)) 
@@ -128,11 +132,11 @@ inode_open (disk_sector_t sector)
       if (inode->sector == sector) 
         {
           inode_reopen (inode);
- 	  //lock_release(&sync_lock);
+ 	  lock_release(&lock);
           return inode; 
         }
     }
-  //lock_release(&sync_lock);
+  lock_release(&lock);
 
 
   /* Allocate memory. */
