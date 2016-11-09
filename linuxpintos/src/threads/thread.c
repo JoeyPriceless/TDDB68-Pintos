@@ -290,27 +290,30 @@ thread_exit (void)
 
 
 #ifdef USERPROG
+
+  // Makes sure that the parent doesn't wait for the killed child
   if(!thread_current()->orphan){
      sema_up(&(thread_current()->childinfo->wait_semaphore));
   }
-/*
+
+  // Close all open files
   int i;
   for(i = 2; i < TABLE_SIZE; i++){
-	if(thread_current()->table[i] != NULL){
-		file_close(thread_current()->table[i]);
-	}
+	file_close(thread_current()->table[i]);
   }
-*/
 
   process_exit ();
   enum intr_level old_level = intr_disable();
+  
+  // Free the memory allocated for the link between the thread and it's
+  // children.
   free_children(&thread_current()->children);
+
   intr_set_level(old_level);  
 #endif
   /* Just set our status to dying and schedule another process.
      We will be destroyed during the call to schedule_tail(). */
   intr_disable ();
-  //list_remove(&thread_current()->running_elem);
   thread_current()->status = THREAD_DYING;
   
   schedule ();
@@ -451,6 +454,9 @@ is_thread (struct thread *t)
   return t != NULL && t->magic == THREAD_MAGIC;
 }
 
+
+// Used when a thread is added to the list of sleeping threads. Makes sure that a thread that is supposed
+// to be woken up before another is placed before the other thread. (Used in timer_sleep)
 bool less_tick_prio (const struct list_elem *left, const struct list_elem *right, void *aux UNUSED){
   const struct thread *thread_one = list_entry (left, struct thread, timer_el);
   const struct thread *thread_two = list_entry (right, struct thread, timer_el);
@@ -596,6 +602,7 @@ schedule (void)
 
 void free_children(struct list* children){
 	// Go through the list of children and set them to orphans
+        // Free the memory allocated for the link between parent and children.
 	while (!list_empty (children)) { 
 		struct list_elem *el = list_pop_front(children);
  		struct child_info *ci = list_entry(el, struct child_info, child_elem);

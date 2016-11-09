@@ -118,26 +118,29 @@ struct thread
     bool beenInit;
     
     /*	LAB 2	*/
-    int64_t target_tick;
+    int64_t target_tick;			// Tick when the thread should wake up
     struct semaphore timer_semaphore;
     struct list_elem timer_el;
 
     // LAB 3
    struct semaphore load_semaphore;
-   bool orphan;
-   struct list children;
-   struct child_info* childinfo;	
+   bool orphan;					// Set to true when parent has died
+   struct list children;			// List of threads children threads	
+   struct child_info* childinfo;		// Link between the thread and its parent
 
 };
 
+// Link between parent thread and its children. Enables the parent to wait for 
+// a child, and the children to do sema_up on the waiting parent. Parent can also
+// access the child threads exit status through this structure.
 struct child_info{
 	tid_t tid;
-	struct semaphore wait_semaphore;
-	struct list_elem child_elem;
-	struct thread* child;
-	bool success;
-	int exit_status;
-	bool been_waited_for;
+	struct semaphore wait_semaphore;	// Enables parent to wait for child
+	struct list_elem child_elem;		// List element in parents list of children
+	struct thread* child;			// Child thread
+	bool success;				// Let parent know that the child was successfully created
+	int exit_status;			// Childs exit status
+	bool been_waited_for;			// Set to true when the parent has already waited for child to die
 };
 
 

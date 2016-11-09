@@ -1,11 +1,11 @@
-Copying tests/userprog/sc-boundary-2 into /tmp/k6y_8z9ofH.dsk...
-Writing command line to /tmp/geKfV7iZcN.dsk...
-qemu -hda /tmp/geKfV7iZcN.dsk -hdb /tmp/BsY7hJNCUz.dsk -hdc /tmp/k6y_8z9ofH.dsk -m 4 -net none -nographic -monitor null
+Copying tests/userprog/sc-boundary-2 into /tmp/niPErCEH4u.dsk...
+Writing command line to /tmp/Vqfpif3WSb.dsk...
+qemu -hda /tmp/Vqfpif3WSb.dsk -hdb /tmp/PB_U4PlfEk.dsk -hdc /tmp/niPErCEH4u.dsk -m 4 -net none -nographic -monitor null
 Kernel command line: -q -f put sc-boundary-2 run sc-boundary-2
 Pintos booting with 4,088 kB RAM...
 371 pages available in kernel pool.
 371 pages available in user pool.
-Calibrating timer...  415,744,000 loops/s.
+Calibrating timer...  419,020,800 loops/s.
 hd0:0: detected 161 sector (80 kB) disk, model "QEMU HARDDISK", serial "QM00001"
 hd0:1: detected 4,032 sector (1 MB) disk, model "QEMU HARDDISK", serial "QM00002"
 hd1:0: detected 101 sector (50 kB) disk, model "QEMU HARDDISK", serial "QM00003"
@@ -15,13 +15,20 @@ Putting 'sc-boundary-2' into the file system...
 Executing 'sc-boundary-2':
 (sc-boundary-2) begin
 sc-boundary-2: exit(67)
-Execution of 'sc-boundary-2' complete.
-Timer: 57 ticks
-Thread: 33 idle ticks, 24 kernel ticks, 0 user ticks
+Kernel PANIC at ../../threads/malloc.c:274 in block_to_arena(): assertion `a->magic == ARENA_MAGIC' failed.
+Call stack: 0xc010713b 0x80480bdPage fault at 0xbfffffb8: not present error reading page in kernel context.
+Interrupt 0x0e (#PF Page-Fault Exception) at eip=0xc0105377
+ cr2=bfffffb8 error=00000000
+ eax=0000000a ebx=bfffffb8 ecx=000006b0 edx=000003d4
+ esi=00000112 edi=c010cc81 esp=c010e643 ebp=c0121e54
+ cs=0008 ds=0010 es=0010 ss=80bd
+Kernel PANIC recursion at ../../userprog/exception.c:100 in kill().
+Timer: 59 ticks
+Thread: 31 idle ticks, 28 kernel ticks, 0 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 59 reads, 210 writes
 hd1:0: 101 reads, 0 writes
-Console: 811 characters output
+Console: 1284 characters output
 Keyboard: 0 keys pressed
-Exception: 0 page faults
+Exception: 1 page faults
 Powering off...

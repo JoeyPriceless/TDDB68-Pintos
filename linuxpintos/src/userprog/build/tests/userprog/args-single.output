@@ -1,6 +1,6 @@
-Copying tests/userprog/args-single into /tmp/POK59A6LWF.dsk...
-Writing command line to /tmp/M2dhB79eX4.dsk...
-qemu -hda /tmp/M2dhB79eX4.dsk -hdb /tmp/DGXhMZ68B5.dsk -hdc /tmp/POK59A6LWF.dsk -m 4 -net none -nographic -monitor null
+Copying tests/userprog/args-single into /tmp/4SJDEGe4Fq.dsk...
+Writing command line to /tmp/YERirh_M6j.dsk...
+qemu -hda /tmp/YERirh_M6j.dsk -hdb /tmp/Nww5HDrxSt.dsk -hdc /tmp/4SJDEGe4Fq.dsk -m 4 -net none -nographic -monitor null
 Kernel command line: -q -f put args-single run 'args-single onearg'
 Pintos booting with 4,088 kB RAM...
 371 pages available in kernel pool.
@@ -20,13 +20,20 @@ Executing 'args-single onearg':
 (args) argv[2] = null
 (args) end
 args-single: exit(0)
-Execution of 'args-single onearg' complete.
-Timer: 60 ticks
-Thread: 31 idle ticks, 28 kernel ticks, 1 user ticks
+Kernel PANIC at ../../threads/malloc.c:274 in block_to_arena(): assertion `a->magic == ARENA_MAGIC' failed.
+Call stack: 0xc010713b 0x804a115Page fault at 0xbfffffb0: not present error reading page in kernel context.
+Interrupt 0x0e (#PF Page-Fault Exception) at eip=0xc0105377
+ cr2=bfffffb0 error=00000000
+ eax=0000000a ebx=bfffffb0 ecx=000007a0 edx=000003d4
+ esi=00000112 edi=c010cc81 esp=c010e643 ebp=c0121e54
+ cs=0008 ds=0010 es=0010 ss=a115
+Kernel PANIC recursion at ../../userprog/exception.c:100 in kill().
+Timer: 58 ticks
+Thread: 33 idle ticks, 25 kernel ticks, 0 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 59 reads, 202 writes
 hd1:0: 97 reads, 0 writes
-Console: 916 characters output
+Console: 1384 characters output
 Keyboard: 0 keys pressed
-Exception: 0 page faults
+Exception: 1 page faults
 Powering off...

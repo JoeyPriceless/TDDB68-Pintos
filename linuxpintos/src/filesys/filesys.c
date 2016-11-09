@@ -106,7 +106,6 @@ filesys_remove (const char *name)
   
   lock_release(&sync_lock);
 
-
   return success;
 }
 

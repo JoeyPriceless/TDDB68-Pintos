@@ -105,17 +105,14 @@ timer_sleep (int64_t ticks)
 
   	ASSERT (intr_get_level () == INTR_ON);
   	
-  	
- 	
  	struct thread *t = thread_current();
 
 	t->target_tick = (timer_ticks() + ticks);
 
-	intr_disable(); 
+	intr_disable();
 	//Put thread in sleeplist.
-	//Sleeplist is ordered by the target_tick value, in ascending order
-	//This is done by compare method less_tick_prio in
-	//"src/threads/thread.c"
+	//Sleeplist is ordered ascending order by the target_tick value
+	//Done by compare method less_tick_prio in method less_tick_prio in thread.c
 	list_insert_ordered (&sleeplist, &t->timer_el,less_tick_prio, NULL);
 	intr_enable();	
 
@@ -161,13 +158,16 @@ timer_interrupt (struct intr_frame *args UNUSED)
   enum intr_level old_level = intr_disable();
   //Iterate through list of sleeping threads.
   while (!list_empty (&sleeplist)) {
-	//Fetch the first thread in the list (with lowest target_tick)
+	//Fetch the first thread in the list (with lowest current target_tick)
  	struct thread *t = list_entry(list_front(&sleeplist), struct thread, timer_el);
 
-	//If true we don't have to continue because of sleeplist:s order 
+	//If thread is supposed to be woken up in the future we don't have to continue looking
+	//through the list
 	if(t->target_tick > timer_ticks()) break;
 
+	//Wake the sleeping thread
 	sema_up(&t->timer_semaphore);
+	//Remove thread from list of sleeping threads
 	list_pop_front(&sleeplist);
   }
   intr_set_level(old_level);

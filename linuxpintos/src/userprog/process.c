@@ -39,6 +39,7 @@ process_execute (const char *file_name)
   tid_t tid;
 
 //Struct containing the arguments needed to create the child
+//(defined in process.h)
   struct child_arguments* arguments = malloc(sizeof(struct child_arguments));
   
 //Struct containing information shared between parent and child
@@ -86,7 +87,7 @@ process_execute (const char *file_name)
   	list_push_back(&thread_current()->children, &childinfo->child_elem);
   	intr_set_level(old_level);
   }
-//Free arguments since this struct was only needed to create the child
+//Free arguments since this structure was only during the creation process
   free(arguments);
   return tid;
 }
@@ -155,14 +156,15 @@ process_wait (tid_t child_tid)
 
 	//printf("[%s:%s:%d:%d]\n", __FILE__,__FUNCTION__,__LINE__,thread_current()->tid);
 	
-//Searches for the child that we will wait for.
+	//Look through the list of links between the thread and its children for a child thread with a tid matching the
+	//child thread we will wait for.
 	struct list_elem* el;
 	for(el = list_begin(&thread_current()->children); el != list_end(&thread_current()->children); el = list_next(el)){
 		struct child_info* ci = list_entry(el, struct child_info, child_elem);
 		//Checks to see that it is the right child and that it has not been waited for
 		//previously.
 		if(ci->tid == child_tid && !ci->been_waited_for) {
-			// Is up:ed in when the child has exit:ed (in syscall).
+			// Is up:ed when the child has exit:ed (in thread_exit).
 			sema_down(&ci->wait_semaphore);
 			ci->been_waited_for = true;
 			return ci->exit_status;
@@ -588,7 +590,6 @@ setup_stack (void **esp, char* command) {
 	if (word_mult){
 	  *esp -= word_mult;
 	  memcpy(*esp, &argv[argc], word_mult);
-
 	}
 	// pointers to arguments (First one is null)
 	int i;

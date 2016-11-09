@@ -3,6 +3,8 @@
 
 #include "threads/thread.h"
 
+// Structure used when a new thread is created. Lets the parent thread wait
+// until the child thread has been created.
 struct child_arguments{
 	struct semaphore load_semaphore;
 	char* fn_copy;

@@ -1,1 +1,11 @@
-PASS
+FAIL
+Kernel panic in run: PANIC at ../../threads/malloc.c:274 in block_to_arena(): assertion `a->magic == ARENA_MAGIC' failed.
+Call stack: 0xc010713b 0x80480bd
+Translation of call stack:
+In kernel.o:
+0xc010713b: debug_panic (.../../lib/kernel/debug.c:34)
+In tests/userprog/sc-boundary-2:
+0x080480bd: test_main (...erprog/sc-boundary-2.c:21)
+Translations of user virtual addresses above are based on a guess at
+the binary to use.  If this guess is incorrect, then those
+translations will be misleading.

@@ -1,6 +1,6 @@
-Copying tests/userprog/sc-boundary into /tmp/TQXVNoQmT5.dsk...
-Writing command line to /tmp/8P9C34DP9_.dsk...
-qemu -hda /tmp/8P9C34DP9_.dsk -hdb /tmp/gJEQMnV0ge.dsk -hdc /tmp/TQXVNoQmT5.dsk -m 4 -net none -nographic -monitor null
+Copying tests/userprog/sc-boundary into /tmp/bLeJiEh_hb.dsk...
+Writing command line to /tmp/cKcwUuWaiF.dsk...
+qemu -hda /tmp/cKcwUuWaiF.dsk -hdb /tmp/1a0TB5zOsH.dsk -hdc /tmp/bLeJiEh_hb.dsk -m 4 -net none -nographic -monitor null
 Kernel command line: -q -f put sc-boundary run sc-boundary
 Pintos booting with 4,088 kB RAM...
 371 pages available in kernel pool.
@@ -15,13 +15,20 @@ Putting 'sc-boundary' into the file system...
 Executing 'sc-boundary':
 (sc-boundary) begin
 sc-boundary: exit(42)
-Execution of 'sc-boundary' complete.
+Kernel PANIC at ../../threads/malloc.c:274 in block_to_arena(): assertion `a->magic == ARENA_MAGIC' failed.
+Call stack: 0xc010713b 0x80480bcPage fault at 0xbfffffbc: not present error reading page in kernel context.
+Interrupt 0x0e (#PF Page-Fault Exception) at eip=0xc0105377
+ cr2=bfffffbc error=00000000
+ eax=0000000a ebx=bfffffbc ecx=000006b0 edx=000003d4
+ esi=00000112 edi=c010cc81 esp=c010e643 ebp=c0121e54
+ cs=0008 ds=0010 es=0010 ss=80bc
+Kernel PANIC recursion at ../../userprog/exception.c:100 in kill().
 Timer: 58 ticks
-Thread: 34 idle ticks, 24 kernel ticks, 0 user ticks
+Thread: 32 idle ticks, 26 kernel ticks, 0 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 59 reads, 210 writes
 hd1:0: 101 reads, 0 writes
-Console: 797 characters output
+Console: 1272 characters output
 Keyboard: 0 keys pressed
-Exception: 0 page faults
+Exception: 1 page faults
 Powering off...
